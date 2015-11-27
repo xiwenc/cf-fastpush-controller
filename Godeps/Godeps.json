@@ -1,0 +1,15 @@
+{
+	"ImportPath": "github.com/xiwenc/go-berlin",
+	"GoVersion": "go1.5.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/ant0ine/go-json-rest/rest",
+			"Comment": "v3.2.0-13-g1eb58eb",
+			"Rev": "1eb58ebad374f392922eabd64cbcc836a96620e4"
+		},
+		{
+			"ImportPath": "github.com/matryer/runner",
+			"Rev": "58ee37c57e17662de14205b24a83c88156fa546d"
+		}
+	]
+}

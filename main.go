@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/xiwenc/go-berlin/Godeps/_workspace/src/github.com/ant0ine/go-json-rest/rest"
+	"github.com/xiwenc/go-berlin/Godeps/_workspace/src/github.com/matryer/runner"
+	"github.com/xiwenc/go-berlin/utils"
 	"log"
 	"net/http"
-	"sync"
-	"path/filepath"
 	"os"
-	"./utils"
-	"strings"
 	"os/exec"
-	"github.com/matryer/runner"
+	"path/filepath"
+	"strings"
+	"sync"
 )
 
 var app_cmd = "python -m http.server"
@@ -40,7 +40,7 @@ var lock = sync.RWMutex{}
 var task *runner.Task
 
 func GetFiles(w rest.ResponseWriter, r *rest.Request) {
-	dir := "./";
+	dir := "./"
 	lock.RLock()
 	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 		if f.IsDir() {
@@ -64,8 +64,8 @@ func GetFiles(w rest.ResponseWriter, r *rest.Request) {
 func RestartApp(w rest.ResponseWriter, r *rest.Request) {
 	lock.RLock()
 	parts := strings.Fields(app_cmd)
-    head := parts[0]
-    parts = parts[1:len(parts)]
+	head := parts[0]
+	parts = parts[1:len(parts)]
 	cmd := exec.Command(head, parts...)
 
 	if task != nil {
