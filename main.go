@@ -8,7 +8,12 @@ import (
 	"path/filepath"
 	"os"
 	"./utils"
+	"strings"
+	"os/exec"
+	"github.com/matryer/runner"
 )
+
+var app_cmd = "python -m http.server"
 
 func main() {
 	api := rest.NewApi()
@@ -32,6 +37,7 @@ type FileEntry struct {
 var store = []*FileEntry{}
 
 var lock = sync.RWMutex{}
+var task *runner.Task
 
 func GetFiles(w rest.ResponseWriter, r *rest.Request) {
 	dir := "./";
@@ -57,6 +63,26 @@ func GetFiles(w rest.ResponseWriter, r *rest.Request) {
 
 func RestartApp(w rest.ResponseWriter, r *rest.Request) {
 	lock.RLock()
+	parts := strings.Fields(app_cmd)
+    head := parts[0]
+    parts = parts[1:len(parts)]
+	cmd := exec.Command(head, parts...)
+
+	if task != nil {
+		task.Stop()
+	}
+
+	task = runner.Go(func(shouldStop runner.S) error {
+		for {
+			cmd.Start()
+			if shouldStop() {
+				cmd.Process.Kill()
+				break
+			}
+		}
+		return nil
+	})
+
 	lock.RUnlock()
 	fileEntry := FileEntry{}
 	w.WriteJson(fileEntry)
