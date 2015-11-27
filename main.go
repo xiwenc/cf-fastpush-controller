@@ -11,11 +11,20 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 )
 
-var app_cmd = "python -m http.server"
+var app_cmd string
+var listenOn = "localhost:9000"
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("Usage: " + os.Args[0] + " backend_command [bind_address:port]")
+	}
+	app_cmd = os.Args[1]
+	if len(os.Args) >= 3 {
+		listenOn = os.Args[2]
+	}
 	api := rest.NewApi()
 	api.Use(rest.DefaultDevStack...)
 	router, err := rest.MakeRouter(
@@ -26,7 +35,8 @@ func main() {
 		log.Fatal(err)
 	}
 	api.SetApp(router)
-	log.Fatal(http.ListenAndServe(":8080", api.MakeHandler()))
+	RestartAppInternal()
+	log.Fatal(http.ListenAndServe(listenOn, api.MakeHandler()))
 }
 
 type FileEntry struct {
@@ -38,6 +48,7 @@ var store = []*FileEntry{}
 
 var lock = sync.RWMutex{}
 var task *runner.Task
+var cmd *exec.Cmd
 
 func GetFiles(w rest.ResponseWriter, r *rest.Request) {
 	dir := "./"
@@ -61,22 +72,26 @@ func GetFiles(w rest.ResponseWriter, r *rest.Request) {
 	w.WriteJson(store)
 }
 
-func RestartApp(w rest.ResponseWriter, r *rest.Request) {
+func RestartAppInternal() {
 	lock.RLock()
 	parts := strings.Fields(app_cmd)
 	head := parts[0]
 	parts = parts[1:len(parts)]
-	cmd := exec.Command(head, parts...)
 
 	if task != nil {
 		task.Stop()
+		cmd.Wait()
 	}
+	cmd = exec.Command(head, parts...)
 
 	task = runner.Go(func(shouldStop runner.S) error {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Start()
+
 		for {
-			cmd.Start()
 			if shouldStop() {
-				cmd.Process.Kill()
+				cmd.Process.Signal(syscall.SIGTERM)
 				break
 			}
 		}
@@ -84,6 +99,10 @@ func RestartApp(w rest.ResponseWriter, r *rest.Request) {
 	})
 
 	lock.RUnlock()
+}
+
+func RestartApp(w rest.ResponseWriter, r *rest.Request) {
+	RestartAppInternal()
 	fileEntry := FileEntry{}
 	w.WriteJson(fileEntry)
 }
