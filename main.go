@@ -26,6 +26,7 @@ func main() {
 		rest.Get("/files", ListFiles),
 		rest.Post("/restart", RestartApp),
 		rest.Get("/status", GetStatus),
+		rest.Put("/files", UploadFiles),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -48,5 +49,12 @@ func RestartApp(w rest.ResponseWriter, r *rest.Request) {
 
 func GetStatus(w rest.ResponseWriter, r *rest.Request) {
 	result := lib.GetStatus()
+	w.WriteJson(result)
+}
+
+func UploadFiles(w rest.ResponseWriter, r *rest.Request) {
+	inputFiles := []lib.FileEntry{}
+	r.DecodeJsonPayload(&inputFiles)
+	result := lib.UploadFiles(inputFiles)
 	w.WriteJson(result)
 }

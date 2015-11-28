@@ -8,14 +8,17 @@ import (
 	"strings"
 	"syscall"
 	"sync"
+	"strconv"
 
 	"github.com/matryer/runner"
 	"github.com/xiwenc/go-berlin/utils"
+	"io/ioutil"
 )
 
 type FileEntry struct {
 	Path     string
 	Checksum string
+	Content	 []byte
 }
 
 type Status struct {
@@ -72,7 +75,7 @@ func ListFiles() []*FileEntry {
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	return store
 }
@@ -84,6 +87,29 @@ func GetStatus() Status {
 		status.Health = "Running"
 	} else {
 		status.Health = "Not-Running"
+	}
+	return status
+}
+
+func UploadFiles(files []FileEntry) Status {
+	status := Status{}
+	failed := 0
+	updated := 0
+	for _, fileEntry := range files {
+		log.Println("Updating file: " + fileEntry.Path)
+		err := ioutil.WriteFile(fileEntry.Path, fileEntry.Content, 0644)
+		if err != nil {
+			log.Println(err)
+			failed++
+		} else {
+			updated++
+		}
+	}
+
+	if failed > 0 {
+		status.Health = "Failed to update " + strconv.Itoa(failed) + " files"
+	} else {
+		status.Health = "Updated " + strconv.Itoa(updated) + " files"
 	}
 	return status
 }
