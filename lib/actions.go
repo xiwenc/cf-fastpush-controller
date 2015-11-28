@@ -9,10 +9,11 @@ import (
 	"syscall"
 	"sync"
 	"strconv"
+	"io/ioutil"
+	"regexp"
 
 	"github.com/matryer/runner"
 	"github.com/xiwenc/go-berlin/utils"
-	"io/ioutil"
 )
 
 type FileEntry struct {
@@ -28,9 +29,22 @@ type Status struct {
 var task *runner.Task
 var cmd *exec.Cmd
 var lock = sync.RWMutex{}
+var cmdRaw = ""
+
+const (
+	ENV_RESTART_REGEX = "BERLIN_RESTART_REGEX"
+	ENV_IGNORE_REGEX = "BERLIN_IGNORE_REGEX"
+)
 
 func RestartApp(backendRunCommand string) Status {
 	log.Println("Restarting backend")
+
+	if len(backendRunCommand) > 0 {
+		cmdRaw = backendRunCommand
+	} else {
+		backendRunCommand = cmdRaw
+	}
+
 	parts := strings.Fields(backendRunCommand)
 	head := parts[0]
 	parts = parts[1:len(parts)]
@@ -95,6 +109,7 @@ func UploadFiles(files []FileEntry) Status {
 	status := Status{}
 	failed := 0
 	updated := 0
+	restart := false
 	for _, fileEntry := range files {
 		log.Println("Updating file: " + fileEntry.Path)
 		err := ioutil.WriteFile(fileEntry.Path, fileEntry.Content, 0644)
@@ -102,6 +117,9 @@ func UploadFiles(files []FileEntry) Status {
 			log.Println(err)
 			failed++
 		} else {
+			if NeedsRestart(fileEntry) {
+				restart = true
+			}
 			updated++
 		}
 	}
@@ -111,5 +129,31 @@ func UploadFiles(files []FileEntry) Status {
 	} else {
 		status.Health = "Updated " + strconv.Itoa(updated) + " files"
 	}
+
+	if restart {
+		RestartApp("")
+		status.Health = "Restarting after updating " + strconv.Itoa(updated) + " files"
+	}
 	return status
+}
+
+
+func NeedsRestart(file FileEntry) bool {
+	ignoreRegex := os.Getenv(ENV_IGNORE_REGEX)
+	if len(ignoreRegex) > 0 {
+		match, _ := regexp.MatchString(ignoreRegex, file.Path)
+		if match {
+			log.Println("Skipping restart for: " + file.Path)
+			return false
+		}
+	}
+	restartRegex := os.Getenv(ENV_RESTART_REGEX)
+	if len(restartRegex) > 0 {
+		match, _ := regexp.MatchString(restartRegex, file.Path)
+		if match {
+			log.Println("Requires restart for: " + file.Path)
+			return true
+		}
+	}
+	return false
 }
