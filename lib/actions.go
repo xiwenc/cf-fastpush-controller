@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"io/ioutil"
 	"regexp"
+	"time"
 
 	"github.com/matryer/runner"
 	"github.com/xiwenc/cf-fastpush-controller/utils"
@@ -66,6 +67,7 @@ func RestartApp(backendRunCommand string) Status {
 				cmd.Process.Signal(syscall.SIGTERM)
 				break
 			}
+			time.Sleep(1000 * time.Millisecond)
 		}
 		return nil
 	})
