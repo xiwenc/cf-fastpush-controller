@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/xiwenc/go-berlin/lib"
+	"github.com/xiwenc/cf-fastpush-controller/lib"
 )
 
 var app_cmd string

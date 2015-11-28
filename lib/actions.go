@@ -13,7 +13,7 @@ import (
 	"regexp"
 
 	"github.com/matryer/runner"
-	"github.com/xiwenc/go-berlin/utils"
+	"github.com/xiwenc/cf-fastpush-controller/utils"
 )
 
 type FileEntry struct {
