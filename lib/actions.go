@@ -32,8 +32,8 @@ var lock = sync.RWMutex{}
 var cmdRaw = ""
 
 const (
-	ENV_RESTART_REGEX = "BERLIN_RESTART_REGEX"
-	ENV_IGNORE_REGEX = "BERLIN_IGNORE_REGEX"
+	ENV_RESTART_REGEX = "FASTPUSH_RESTART_REGEX"
+	ENV_IGNORE_REGEX = "FASTPUSH_IGNORE_REGEX"
 )
 
 func RestartApp(backendRunCommand string) Status {
