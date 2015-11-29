@@ -121,6 +121,8 @@ func UploadFiles(files map[string]*FileEntry) Status {
 	restart := false
 	for path, fileEntry := range files {
 		log.Println("Updating file: " + path)
+		dir := filepath.Dir(path)
+		os.MkdirAll(dir, 0755)
 		err := ioutil.WriteFile(path, fileEntry.Content, 0644)
 		if err != nil {
 			log.Println(err)
@@ -136,7 +138,7 @@ func UploadFiles(files map[string]*FileEntry) Status {
 	if failed > 0 {
 		status.Health = "Failed to update " + strconv.Itoa(failed) + " files"
 	} else {
-		status.Health = "Updated " + strconv.Itoa(updated) + " files"
+		status.Health = "Updated " + strconv.Itoa(updated) + " files without restart"
 	}
 
 	if restart {

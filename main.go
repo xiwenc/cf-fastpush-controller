@@ -54,8 +54,13 @@ func GetStatus(w rest.ResponseWriter, r *rest.Request) {
 }
 
 func UploadFiles(w rest.ResponseWriter, r *rest.Request) {
+
 	inputFiles := map[string]*lib.FileEntry{}
-	r.DecodeJsonPayload(&inputFiles)
+	err := r.DecodeJsonPayload(&inputFiles)
+	if err != nil {
+		log.Println(err.Error())
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+	}
 	result := lib.UploadFiles(inputFiles)
 	w.WriteJson(result)
 }
