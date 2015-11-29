@@ -32,7 +32,8 @@ func main() {
 		log.Fatal(err)
 	}
 	api.SetApp(router)
-	lib.RestartApp(app_cmd)
+	go lib.RestartApp(app_cmd)
+	go lib.ListFiles()
 	log.Fatal(http.ListenAndServe(listenOn, api.MakeHandler()))
 }
 
@@ -53,7 +54,7 @@ func GetStatus(w rest.ResponseWriter, r *rest.Request) {
 }
 
 func UploadFiles(w rest.ResponseWriter, r *rest.Request) {
-	inputFiles := []lib.FileEntry{}
+	inputFiles := map[string]*lib.FileEntry{}
 	r.DecodeJsonPayload(&inputFiles)
 	result := lib.UploadFiles(inputFiles)
 	w.WriteJson(result)
