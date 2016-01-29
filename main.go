@@ -70,7 +70,7 @@ func main() {
 		Scheme: "http",
 		Host:   backendOn,
 	})
-	http.HandleFunc("/", reverseProxyHandler(reverseProxy))
+	http.HandleFunc("/", ReverseProxyHandler(reverseProxy))
 
 	go lib.RestartApp(appCmd)
 	go lib.ListFiles()
@@ -81,7 +81,7 @@ func SetJsonContentType(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func reverseProxyHandler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
+func ReverseProxyHandler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.URL)
 		r.URL.Path = "/"
