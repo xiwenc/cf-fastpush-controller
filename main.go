@@ -11,7 +11,7 @@ import (
 	"github.com/xiwenc/cf-fastpush-controller/lib"
 )
 
-var app_cmd string
+var appCmd string
 var listenOn string
 var backendOn string
 
@@ -33,7 +33,7 @@ func main() {
 	viper.SetDefault(lib.CONFIG_BACKEND_PORT, "8080")
 	viper.SetDefault(lib.CONFIG_BASE_PATH, "/_fastpush")
 
-	app_cmd = viper.GetString(lib.CONFIG_BACKEND_COMMAND)
+	appCmd = viper.GetString(lib.CONFIG_BACKEND_COMMAND)
 	listenOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_PORT)
 	backendOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_BACKEND_PORT)
 	basePath := viper.GetString(lib.CONFIG_BASE_PATH)
@@ -69,7 +69,7 @@ func main() {
 	})
 	http.HandleFunc("/", reverseProxyHandler(reverseProxy))
 
-	go lib.RestartApp(app_cmd)
+	go lib.RestartApp(appCmd)
 	go lib.ListFiles()
 	http.ListenAndServe(listenOn, nil)
 }
@@ -90,7 +90,7 @@ func ListFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 func RestartApp(w http.ResponseWriter, r *http.Request) {
-	result := lib.RestartApp(app_cmd)
+	result := lib.RestartApp(appCmd)
 	json.NewEncoder(w).Encode(result)
 }
 
