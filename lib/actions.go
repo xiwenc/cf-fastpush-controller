@@ -13,8 +13,10 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/matryer/runner"
 	"github.com/xiwenc/cf-fastpush-controller/utils"
+	"fmt"
 )
 
 type FileEntry struct {
@@ -33,12 +35,6 @@ var lock = sync.RWMutex{}
 var cmdRaw = ""
 var store = map[string]*FileEntry{}
 
-const (
-	ENV_RESTART_REGEX = "FASTPUSH_RESTART_REGEX"
-	ENV_IGNORE_REGEX = "FASTPUSH_IGNORE_REGEX"
-	ENV_APP_DIRS = "FASTPUSH_APP_DIRS"
-)
-
 func RestartApp(backendRunCommand string) Status {
 	log.Println("Restarting backend")
 
@@ -47,6 +43,7 @@ func RestartApp(backendRunCommand string) Status {
 	} else {
 		backendRunCommand = cmdRaw
 	}
+	log.Println("Backend command: " + backendRunCommand)
 
 	parts := strings.Fields(backendRunCommand)
 	head := parts[0]
@@ -54,10 +51,13 @@ func RestartApp(backendRunCommand string) Status {
 	lock.RLock()
 
 	if task != nil {
+		log.Println("Stopping running backend")
 		task.Stop()
 		cmd.Wait()
 	}
 	cmd = exec.Command(head, parts...)
+	// Copy and change current environment for the backend
+	cmd.Env = GetBackendEnvironment()
 
 	task = runner.Go(func(shouldStop runner.S) error {
 		cmd.Stdout = os.Stdout
@@ -150,7 +150,7 @@ func UploadFiles(files map[string]*FileEntry) Status {
 
 
 func NeedsRestart(path string) bool {
-	ignoreRegex := os.Getenv(ENV_IGNORE_REGEX)
+	ignoreRegex := viper.GetString(CONFIG_IGNORE_REGEX)
 	if len(ignoreRegex) > 0 {
 		match, _ := regexp.MatchString(ignoreRegex, path)
 		if match {
@@ -158,7 +158,7 @@ func NeedsRestart(path string) bool {
 			return false
 		}
 	}
-	restartRegex := os.Getenv(ENV_RESTART_REGEX)
+	restartRegex := viper.GetString(CONFIG_RESTART_REGEX)
 	if len(restartRegex) > 0 {
 		match, _ := regexp.MatchString(restartRegex, path)
 		if match {
@@ -170,9 +170,28 @@ func NeedsRestart(path string) bool {
 }
 
 func GetAppDirs() []string {
-	appDirsRaw := os.Getenv(ENV_APP_DIRS)
+	appDirsRaw := viper.GetString(CONFIG_BACKEND_DIRS)
 	if len(appDirsRaw) > 0 {
 		return strings.Fields(appDirsRaw)
 	}
 	return []string{"./"}
+}
+
+func GetBackendEnvironment() []string {
+	const portLabel = "PORT"
+	var currentEnv = os.Environ()
+	var portIndex = -1
+	for idx, item := range currentEnv {
+		var tokens = strings.Split(item, "=")
+		if tokens[0] == portLabel {
+			portIndex = idx;
+		}
+	}
+	var portEnv = fmt.Sprintf("%s=%s", portLabel, viper.GetString(CONFIG_BACKEND_PORT))
+	if portIndex < 0 {
+		return append(currentEnv, portEnv)
+	} else {
+		currentEnv[portIndex] = portEnv
+		return currentEnv
+	}
 }

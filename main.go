@@ -3,23 +3,34 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
+	"github.com/spf13/viper"
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/xiwenc/cf-fastpush-controller/lib"
 )
 
 var app_cmd string
-var listenOn = "localhost:9000"
+var listenOn string
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Usage: " + os.Args[0] + " backend_command [bind_address:port]")
-	}
-	app_cmd = os.Args[1]
-	if len(os.Args) >= 3 {
-		listenOn = os.Args[2]
-	}
+
+	viper.SetConfigName("cf-fastpush-controller")
+	viper.AddConfigPath("/etc/")
+	viper.AddConfigPath("$HOME/.config/")
+	viper.AddConfigPath(".")
+	viper.ReadInConfig()
+
+	viper.SetDefault(lib.CONFIG_BIND_ADDRESS, "0.0.0.0")
+	viper.SetDefault(lib.CONFIG_PORT, "9000")
+	viper.SetDefault(lib.CONFIG_BACKEND_DIRS, "./")
+	viper.SetDefault(lib.CONFIG_RESTART_REGEX, "*.py^")
+	viper.SetDefault(lib.CONFIG_IGNORE_REGEX, "")
+	viper.SetDefault(lib.CONFIG_BACKEND_COMMAND, "python -m http.server")
+	viper.SetDefault(lib.CONFIG_BACKEND_PORT, "8080")
+
+	app_cmd = viper.GetString(lib.CONFIG_BACKEND_COMMAND)
+	listenOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_PORT)
+
 	api := rest.NewApi()
 	api.Use(rest.DefaultDevStack...)
 	router, err := rest.MakeRouter(
