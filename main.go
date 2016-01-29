@@ -22,6 +22,7 @@ func main() {
 	viper.AddConfigPath("$HOME/.config/")
 	viper.AddConfigPath(".")
 	viper.ReadInConfig()
+	viper.AutomaticEnv()
 
 	viper.SetDefault(lib.CONFIG_BIND_ADDRESS, "127.0.0.1")
 	viper.SetDefault(lib.CONFIG_PORT, "9000")
@@ -34,6 +35,8 @@ func main() {
 	app_cmd = viper.GetString(lib.CONFIG_BACKEND_COMMAND)
 	listenOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_PORT)
 	backendOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_BACKEND_PORT)
+
+	log.Println("Controller listening to: " + listenOn)
 
 	http.HandleFunc("/files", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
