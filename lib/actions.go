@@ -79,12 +79,17 @@ func RestartApp(backendRunCommand string) Status {
 
 func ListFiles() map[string]*FileEntry {
 	for _, dir := range GetAppDirs() {
+		log.Println("Listing files for: " + dir)
 		err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 			if f.IsDir() {
 				return nil
 			}
 			if store[path] != nil && store[path].Modification == f.ModTime().Unix() {
 				// cache hit
+				return nil
+			}
+			if strings.HasPrefix(path, ".git") {
+				// ignore .git
 				return nil
 			}
 			fileEntry := FileEntry{}
