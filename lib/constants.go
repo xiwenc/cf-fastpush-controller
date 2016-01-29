@@ -8,4 +8,5 @@ const (
 	CONFIG_BACKEND_PORT = "backend_port"
 	CONFIG_RESTART_REGEX = "restart_regex"
 	CONFIG_IGNORE_REGEX = "ignore_regex"
+	CONFIG_BASE_PATH = "base_path"
 )

@@ -31,14 +31,16 @@ func main() {
 	viper.SetDefault(lib.CONFIG_IGNORE_REGEX, "")
 	viper.SetDefault(lib.CONFIG_BACKEND_COMMAND, "python -m http.server")
 	viper.SetDefault(lib.CONFIG_BACKEND_PORT, "8080")
+	viper.SetDefault(lib.CONFIG_BASE_PATH, "/_fastpush")
 
 	app_cmd = viper.GetString(lib.CONFIG_BACKEND_COMMAND)
 	listenOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_PORT)
 	backendOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_BACKEND_PORT)
+	basePath := viper.GetString(lib.CONFIG_BASE_PATH)
 
 	log.Println("Controller listening to: " + listenOn)
 
-	http.HandleFunc("/files", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(basePath + "/files", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			ListFiles(w, r)
 		} else if r.Method == "PUT" {
@@ -47,14 +49,14 @@ func main() {
 			http.Error(w, "Invalid request method.", http.StatusMethodNotAllowed)
 		}
 	})
-	http.HandleFunc("/restart", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(basePath + "/restart", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			RestartApp(w, r)
 		} else {
 			http.Error(w, "Invalid request method.", http.StatusMethodNotAllowed)
 		}
 	})
-	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(basePath + "/status", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			GetStatus(w, r)
 		} else {
@@ -66,6 +68,9 @@ func main() {
 		Host:   backendOn,
 	})
 	http.HandleFunc("/", reverseProxyHandler(reverseProxy))
+
+	go lib.RestartApp(app_cmd)
+	go lib.ListFiles()
 	http.ListenAndServe(listenOn, nil)
 }
 
