@@ -24,7 +24,7 @@ func main() {
 	viper.ReadInConfig()
 	viper.AutomaticEnv()
 
-	viper.SetDefault(lib.CONFIG_BIND_ADDRESS, "127.0.0.1")
+	viper.SetDefault(lib.CONFIG_BIND_ADDRESS, "0.0.0.0")
 	viper.SetDefault(lib.CONFIG_PORT, "9000")
 	viper.SetDefault(lib.CONFIG_BACKEND_DIRS, "./")
 	viper.SetDefault(lib.CONFIG_RESTART_REGEX, "*.py^")
@@ -35,7 +35,7 @@ func main() {
 
 	appCmd = viper.GetString(lib.CONFIG_BACKEND_COMMAND)
 	listenOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_PORT)
-	backendOn = viper.GetString(lib.CONFIG_BIND_ADDRESS) + ":" + viper.GetString(lib.CONFIG_BACKEND_PORT)
+	backendOn = "127.0.0.1:" + viper.GetString(lib.CONFIG_BACKEND_PORT)
 	basePath := viper.GetString(lib.CONFIG_BASE_PATH)
 
 	log.Println("Controller listening to: " + listenOn)
