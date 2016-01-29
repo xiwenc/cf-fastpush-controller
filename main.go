@@ -41,6 +41,7 @@ func main() {
 	log.Println("Controller listening to: " + listenOn)
 
 	http.HandleFunc(basePath + "/files", func(w http.ResponseWriter, r *http.Request) {
+		SetJsonContentType(w)
 		if r.Method == "GET" {
 			ListFiles(w, r)
 		} else if r.Method == "PUT" {
@@ -50,6 +51,7 @@ func main() {
 		}
 	})
 	http.HandleFunc(basePath + "/restart", func(w http.ResponseWriter, r *http.Request) {
+		SetJsonContentType(w)
 		if r.Method == "POST" {
 			RestartApp(w, r)
 		} else {
@@ -57,6 +59,7 @@ func main() {
 		}
 	})
 	http.HandleFunc(basePath + "/status", func(w http.ResponseWriter, r *http.Request) {
+		SetJsonContentType(w)
 		if r.Method == "GET" {
 			GetStatus(w, r)
 		} else {
@@ -74,6 +77,9 @@ func main() {
 	http.ListenAndServe(listenOn, nil)
 }
 
+func SetJsonContentType(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+}
 
 func reverseProxyHandler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
