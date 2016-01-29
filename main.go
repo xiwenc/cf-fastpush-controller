@@ -134,7 +134,6 @@ func GetLocalToken() string {
 func ReverseProxyHandler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.URL)
-		r.URL.Path = "/"
 		p.ServeHTTP(w, r)
 	}
 }
