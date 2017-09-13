@@ -15,7 +15,6 @@ import (
 
 type VCAP_APPLICATION struct {
 	ApplicationID      string `json:"application_id"`
-	ApplicationVersion string `json:"application_version"`
 }
 var appCmd string
 var listenOn string
@@ -120,7 +119,7 @@ func GetLocalToken() string {
 			if err := json.Unmarshal(data, &vcap); err != nil {
 				panic(err)
 			} else {
-				token := vcap.ApplicationID + "-" + vcap.ApplicationVersion
+				token := vcap.ApplicationID
 				log.Println("Authentication token: " + token)
 				return token
 			}
